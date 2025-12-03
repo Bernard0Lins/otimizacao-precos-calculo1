@@ -1,4 +1,4 @@
-# 📊 Price Optimization AI: Sistema de Apoio à Decisão
+# 📊 Otimização de Preço : Sistema de Apoio à Decisão
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-red)
