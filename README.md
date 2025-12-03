@@ -1,1 +1,0 @@
-# otimizacao-precos-calculo1
