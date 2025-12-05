@@ -5,3 +5,5 @@ sympy
 scikit-learn
 plotly
 statsmodels
+sqlalchemy
+psycopg2-binary
