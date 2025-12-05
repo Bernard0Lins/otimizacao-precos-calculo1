@@ -1,4 +1,4 @@
-# 📊 Price Optimization AI: Sistema de Apoio à Decisão
+# 📊 Sistema de Apoio à Decisão (SAD) para Precificação
 > Um sistema Full Stack para otimização de preços de venda utilizando **Cálculo Diferencial**, **Machine Learning** e **Persistência em Banco de Dados**.
 
 ## 📖 Sobre o Projeto
