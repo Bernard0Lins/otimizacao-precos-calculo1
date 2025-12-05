@@ -8,7 +8,6 @@ import logging
 from datetime import datetime
 from sqlalchemy import create_engine, text
 
-# --- 1. CONFIGURAÇÃO DA ARQUITETURA E LOGS ---
 st.set_page_config(
     page_title="Price Optimization AI",
     page_icon="📈",
@@ -16,7 +15,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Configuração de Logs (Gera arquivo 'sistema.log')
 logging.basicConfig(
     filename='sistema.log',
     level=logging.INFO,
@@ -24,7 +22,6 @@ logging.basicConfig(
     force=True
 )
 
-# CSS para visual profissional (Correção Dark Mode)
 st.markdown("""
     <style>
     .main { padding-top: 2rem; }
@@ -37,14 +34,9 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- FUNÇÕES DE BANCO DE DADOS (POSTGRESQL) ---
 def get_db_engine():
-    """
-    Cria a conexão com o PostgreSQL usando as credenciais do secrets.toml.
-    Retorna a 'engine' do SQLAlchemy ou None se falhar.
-    """
+
     try:
-        # Tenta pegar as senhas do arquivo .streamlit/secrets.toml
         if "connections" in st.secrets and "postgresql" in st.secrets["connections"]:
             db = st.secrets["connections"]["postgresql"]
             # Monta a URL de conexão: postgresql+psycopg2://user:pass@host:port/db
@@ -59,11 +51,9 @@ def get_db_engine():
         return None
 
 def salvar_simulacao(custo_u, custo_f, preco_opt, lucro_max):
-    """Grava o resultado da otimização na tabela do Postgres."""
     engine = get_db_engine()
     if engine:
         try:
-            # Cria um DataFrame de 1 linha com os dados atuais
             dados = pd.DataFrame({
                 'data_hora': [datetime.now()],
                 'custo_unitario': [custo_u],
@@ -71,7 +61,7 @@ def salvar_simulacao(custo_u, custo_f, preco_opt, lucro_max):
                 'preco_otimo': [preco_opt],
                 'lucro_maximo': [lucro_max]
             })
-            # Insere no banco (append = adicionar ao final)
+            
             dados.to_sql('historico_simulacoes', engine, if_exists='append', index=False)
             logging.info("Simulação salva no PostgreSQL com sucesso.")
             return True
@@ -81,7 +71,6 @@ def salvar_simulacao(custo_u, custo_f, preco_opt, lucro_max):
     return False
 
 def ler_historico():
-    """Lê as últimas 50 simulações do banco para exibir na tela."""
     engine = get_db_engine()
     if engine:
         try:
@@ -93,7 +82,6 @@ def ler_historico():
             return pd.DataFrame() # Retorna vazio se der erro
     return pd.DataFrame()
 
-# --- 2. PERSONA E INPUTS (SIDEBAR) ---
 with st.sidebar:
     st.header("⚙️ Painel de Controle")
     st.markdown("**Persona:** Ana (Gerente de Marketing)")
@@ -110,9 +98,7 @@ with st.sidebar:
     st.divider()
     st.caption("Backend: Python + PostgreSQL")
 
-# --- 3. LÓGICA DO SISTEMA (BACKEND) ---
 
-# A. Geração de Dados (Simulação)
 np.random.seed(42)
 n_pontos = 200
 precos_simulados = np.random.uniform(30, 180, n_pontos)
@@ -121,7 +107,6 @@ vendas_simuladas = demanda_base + np.random.normal(0, ruido_dados, n_pontos)
 vendas_simuladas = np.maximum(vendas_simuladas, 0)
 df = pd.DataFrame({'Preco': precos_simulados, 'Vendas': vendas_simuladas})
 
-# B. Machine Learning (Treinamento)
 try:
     X = df[['Preco']].values
     y = df['Vendas'].values
@@ -137,7 +122,6 @@ except Exception as e:
     logging.error(f"Erro ML: {str(e)}")
     st.stop() # Para a execução
 
-# C. Modelagem Matemática (Cálculo e SymPy)
 p = sp.symbols('p')
 preco_otimo = 0.0
 lucro_maximo = 0.0
@@ -146,34 +130,28 @@ erro_calculo = False
 salvo_no_bd = False
 
 try:
-    # Definição das Equações
     q_p = a_coef * p + b_coef
     receita_p = p * q_p
     custo_p = custo_unitario * q_p + custo_fixo
     lucro_p = receita_p - custo_p
     
-    # Derivadas
     d_lucro = sp.diff(lucro_p, p)
     d2_lucro = sp.diff(d_lucro, p)
     
-    # Solver (Otimização)
     ponto_critico = sp.solve(d_lucro, p)
     
     if ponto_critico:
         preco_otimo = float(ponto_critico[0])
         
-        # Validação de Negócios (Preço não pode ser negativo)
         if preco_otimo < 0:
             raise ValueError("Preço ótimo negativo (Inviável).")
             
         lucro_maximo = float(lucro_p.subs(p, preco_otimo))
         venda_esperada = float(q_p.subs(p, preco_otimo))
         
-        # Teste da 2ª Derivada
         eh_maximo = float(d2_lucro) < 0
         
         if eh_maximo:
-            # PERSISTÊNCIA: Salvar no PostgreSQL
             salvo_no_bd = salvar_simulacao(custo_unitario, custo_fixo, preco_otimo, lucro_maximo)
         else:
             st.warning("Ponto encontrado é de Mínimo.")
@@ -185,8 +163,6 @@ except Exception as e:
     erro_calculo = True
     logging.error(f"Erro matemático: {str(e)}")
     st.error(f"Erro de Cálculo: {str(e)}")
-
-# --- 4. INTERFACE GRÁFICA (FRONTEND) ---
 
 st.title("📊 Sistema de Otimização de Preços")
 
@@ -201,7 +177,6 @@ with tab1:
         col2.metric("Lucro Máximo", f"R$ {lucro_maximo:.2f}", delta_color="normal")
         col3.metric("Demanda", f"{int(venda_esperada)} unid")
         
-        # Gráfico Interativo
         x_vals = np.linspace(max(0, preco_otimo - 50), preco_otimo + 50, 100)
         lucro_lambda = sp.lambdify(p, lucro_p, "numpy")
         y_vals = lucro_lambda(x_vals)
@@ -234,7 +209,6 @@ with tab2:
 with tab3:
     st.subheader("Integração com PostgreSQL")
     
-    # Status da Conexão
     engine = get_db_engine()
     if engine:
         st.success("🟢 Conexão com Banco de Dados: ATIVA")
