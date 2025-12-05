@@ -44,12 +44,68 @@ A "mágica" por trás do sistema utiliza o **Teorema de Fermat para Pontos Estac
 
 Siga os passos abaixo para rodar a aplicação na sua máquina local.
 
-### Pré-requisitos
-* [Python 3.11+](https://www.python.org/) instalado.
-* [PostgreSQL](https://www.postgresql.org/) instalado e rodando.
+Pré-requisitos
 
-### 1. Clonar e Instalar
-```bash
+Python 3.11+ instalado.
+
+PostgreSQL instalado e rodando.
+
+## 1. Clonar e Instalar
+
+Abra o terminal e execute:
+
+# Clone o repositório
 git clone [https://github.com/SEU_USUARIO/NOME_DO_REPO.git](https://github.com/SEU_USUARIO/NOME_DO_REPO.git)
 cd NOME_DO_REPO
+
+# Instale as dependências
 pip install -r requirements.txt
+
+
+## 2. Preparar o Banco de Dados
+
+Abra o pgAdmin (ou terminal do Postgres).
+
+Crie um banco de dados chamado calculo_db.
+
+Abra a "Query Tool" desse banco e rode o código abaixo para criar a tabela:
+
+CREATE TABLE historico_simulacoes (
+    id SERIAL PRIMARY KEY,
+    data_hora TIMESTAMP,
+    custo_unitario FLOAT,
+    custo_fixo FLOAT,
+    preco_otimo FLOAT,
+    lucro_maximo FLOAT
+);
+
+
+3. Configurar a Senha (Obrigatório)
+
+O sistema precisa da senha do seu banco local para conectar. Por segurança, ela não fica salva no Git.
+
+Na raiz do projeto, crie uma pasta chamada .streamlit.
+
+Dentro dela, crie um arquivo chamado secrets.toml.
+
+Cole o conteúdo abaixo e insira sua senha:
+
+# Arquivo: .streamlit/secrets.toml
+
+[connections.postgresql]
+dialect = "postgresql"
+username = "postgres"
+password = "SUA_SENHA_DO_POSTGRES_AQUI"
+host = "localhost"
+port = "5432"
+database = "calculo_db"
+
+
+4. Rodar o Sistema
+
+No terminal, execute:
+
+streamlit run app/main.py
+
+
+O navegador abrirá automaticamente em http://localhost:8501.
