@@ -22,29 +22,79 @@ logging.basicConfig(
     force=True
 )
 
-st.markdown("""
+cor_fundo = "#0e1117"
+cor_texto = "#fafafa"
+cor_sidebar = "#262730"
+cor_metric_bg = "#1f2937" 
+cor_metric_border = "rgba(255, 255, 255, 0.2)"
+tema_grafico = "plotly_dark"
+linha_cor = "#2ecc71"
+
+cor_alerta_bg = "#ffffff"
+cor_alerta_texto = "#000000"
+
+st.markdown(f"""
     <style>
-    .main { padding-top: 2rem; }
-    div[data-testid="stMetric"] {
-        background-color: rgba(255, 255, 255, 0.05); 
-        border: 1px solid rgba(255, 255, 255, 0.2);
+    .stApp {{
+        background-color: {cor_fundo};
+        color: {cor_texto};
+    }}
+    [data-testid="stSidebar"] {{
+        background-color: {cor_sidebar};
+    }}
+    [data-testid="stHeader"] {{
+        background-color: {cor_fundo};
+    }}
+    
+    div[data-testid="stMetric"] {{
+        background-color: {cor_metric_bg}; 
+        border: 1px solid {cor_metric_border};
         padding: 10px;
         border-radius: 10px;
-    }
+        color: {cor_texto};
+    }}
+    div[data-testid="stMetric"] label {{
+        color: {cor_texto} !important;
+    }}
+    div[data-testid="stMetric"] [data-testid="stMetricValue"] {{
+        color: {cor_texto} !important;
+    }}
+
+    div[data-testid="stToast"] {{
+        background-color: {cor_alerta_bg} !important;
+        color: {cor_alerta_texto} !important;
+        border: 1px solid #cccccc;
+    }}
+    
+    div[data-testid="stAlert"] {{
+        background-color: {cor_alerta_bg} !important; 
+        color: {cor_alerta_texto} !important;
+        border: 1px solid #cccccc;
+    }}
+    
+    div[data-testid="stAlert"] p, div[data-testid="stAlert"] div {{
+        color: {cor_alerta_texto} !important;
+    }}
+    
+    h1, h2, h3, h4, h5, h6, p, span, div {{
+        color: {cor_texto} !important;
+    }}
+    
+    button, input {{
+        color: initial !important; 
+    }}
     </style>
     """, unsafe_allow_html=True)
 
 def get_db_engine():
-
     try:
         if "connections" in st.secrets and "postgresql" in st.secrets["connections"]:
             db = st.secrets["connections"]["postgresql"]
-            # Monta a URL de conexão: postgresql+psycopg2://user:pass@host:port/db
             url = f"postgresql+psycopg2://{db['username']}:{db['password']}@{db['host']}:{db['port']}/{db['database']}"
             engine = create_engine(url)
             return engine
         else:
-            logging.error("Arquivo secrets.toml não encontrado ou mal formatado.")
+            logging.error("Arquivo secrets.toml não encontrado.")
             return None
     except Exception as e:
         logging.error(f"Erro ao configurar conexão DB: {e}")
@@ -61,7 +111,6 @@ def salvar_simulacao(custo_u, custo_f, preco_opt, lucro_max):
                 'preco_otimo': [preco_opt],
                 'lucro_maximo': [lucro_max]
             })
-            
             dados.to_sql('historico_simulacoes', engine, if_exists='append', index=False)
             logging.info("Simulação salva no PostgreSQL com sucesso.")
             return True
@@ -75,17 +124,15 @@ def ler_historico():
     if engine:
         try:
             query = "SELECT * FROM historico_simulacoes ORDER BY data_hora DESC LIMIT 50"
-            df = pd.read_sql(query, engine)
-            return df
+            return pd.read_sql(query, engine)
         except Exception as e:
             logging.error(f"Erro ao ler do banco: {e}")
-            return pd.DataFrame() # Retorna vazio se der erro
+            return pd.DataFrame()
     return pd.DataFrame()
 
 with st.sidebar:
     st.header("⚙️ Painel de Controle")
     st.markdown("**Persona:** Ana (Gerente de Marketing)")
-    st.info("Sistema de Apoio à Decisão: Otimização de Lucro")
     
     st.markdown("### 💰 Custos")
     custo_unitario = st.number_input("Custo Variável (R$/unid)", value=45.0, step=1.0)
@@ -93,11 +140,10 @@ with st.sidebar:
     
     st.markdown("### 🎲 Mercado")
     sensibilidade_preco = st.slider("Elasticidade da Demanda", 1.0, 5.0, 2.5)
-    ruido_dados = st.slider("Incerteza (Ruído)", 0, 100, 20)
+    
+    ruido_dados = 20
     
     st.divider()
-    st.caption("Backend: Python + PostgreSQL")
-
 
 np.random.seed(42)
 n_pontos = 200
@@ -119,8 +165,7 @@ try:
 
 except Exception as e:
     st.error("Erro crítico no Machine Learning.")
-    logging.error(f"Erro ML: {str(e)}")
-    st.stop() # Para a execução
+    st.stop()
 
 p = sp.symbols('p')
 preco_otimo = 0.0
@@ -144,7 +189,7 @@ try:
         preco_otimo = float(ponto_critico[0])
         
         if preco_otimo < 0:
-            raise ValueError("Preço ótimo negativo (Inviável).")
+            raise ValueError("Preço ótimo negativo.")
             
         lucro_maximo = float(lucro_p.subs(p, preco_otimo))
         venda_esperada = float(q_p.subs(p, preco_otimo))
@@ -157,11 +202,9 @@ try:
             st.warning("Ponto encontrado é de Mínimo.")
     else:
         erro_calculo = True
-        logging.warning("Sem raízes reais.")
 
 except Exception as e:
     erro_calculo = True
-    logging.error(f"Erro matemático: {str(e)}")
     st.error(f"Erro de Cálculo: {str(e)}")
 
 st.title("📊 Sistema de Otimização de Preços")
@@ -182,9 +225,21 @@ with tab1:
         y_vals = lucro_lambda(x_vals)
         
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', name='Curva Lucro', line=dict(color='#2ecc71', width=3)))
+        
+        fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', name='Curva Lucro', line=dict(color=linha_cor, width=3)))
         fig.add_trace(go.Scatter(x=[preco_otimo], y=[lucro_maximo], mode='markers', name='Ponto Ótimo', marker=dict(color='red', size=12)))
-        fig.update_layout(title="Maximização de Lucro", xaxis_title="Preço (R$)", yaxis_title="Lucro (R$)", height=400)
+        
+        fig.update_layout(
+            title="Maximização de Lucro",
+            xaxis_title="Preço (R$)",
+            yaxis_title="Lucro (R$)",
+            height=400,
+            template=tema_grafico,
+            paper_bgcolor=cor_fundo,
+            plot_bgcolor=cor_fundo,
+            font=dict(color=cor_texto)
+        )
+        
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.error("Não foi possível calcular o ponto ótimo.")
