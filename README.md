@@ -79,8 +79,7 @@ CREATE TABLE historico_simulacoes (
     lucro_maximo FLOAT
 );
 
-
-3. Configurar a Senha (Obrigatório)
+## 3. Configurar a Senha (Obrigatório)
 
 O sistema precisa da senha do seu banco local para conectar. Por segurança, ela não fica salva no Git.
 
@@ -101,7 +100,7 @@ port = "5432"
 database = "calculo_db"
 
 
-4. Rodar o Sistema
+## 4. Rodar o Sistema
 
 No terminal, execute:
 
