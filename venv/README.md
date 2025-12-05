@@ -1,22 +1,15 @@
-# 📊 Otimização de Preço : Sistema de Apoio à Decisão
-
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-red)
-![Status](https://img.shields.io/badge/Status-Finalizado-success)
-
-> Um sistema Full Stack para otimização de preços de venda utilizando **Cálculo Diferencial** 
-
----
+# 📊 Sistema de Apoio à Decisão (SAD) para Precificação
+> Um sistema Full Stack para otimização de preços de venda utilizando **Cálculo Diferencial**, **Machine Learning** e **Persistência em Banco de Dados**.
 
 ## 📖 Sobre o Projeto
 Este projeto foi desenvolvido como requisito avaliativo da disciplina de **Cálculo 1** do curso de Ciência da Computação. 
 
-O objetivo é aplicar conceitos matemáticos (derivadas e otimização) em um problema real de engenharia de software e análise de dados. O sistema simula o ambiente de um e-commerce, modela o comportamento da demanda e recomenda o preço exato que maximiza o lucro da empresa.
+O objetivo é aplicar conceitos matemáticos (derivadas e otimização) em um problema real de engenharia de software e análise de dados. O sistema simula o ambiente de um e-commerce, modela o comportamento da demanda via IA e recomenda o preço exato que maximiza o lucro da empresa, salvando as decisões em um banco de dados relacional.
 
 ### 👤 A Persona (Cliente)
 * **Nome:** Ana, Gerente de Marketing.
 * **O Problema:** Ana precisa definir o preço de um produto para a Black Friday. Se cobrar muito barato, a margem de lucro some. Se cobrar muito caro, as vendas despencam.
-* **A Solução:** Um dashboard interativo que calcula matematicamente o ponto ótimo de equilíbrio.
+* **A Solução:** Um dashboard interativo que calcula matematicamente o ponto ótimo de equilíbrio e mantém um histórico auditável das simulações.
 
 ---
 
@@ -39,11 +32,11 @@ A "mágica" por trás do sistema utiliza o **Teorema de Fermat para Pontos Estac
 ## 🛠️ Tecnologias Utilizadas
 
 * **Linguagem:** Python 3.11+
-* **Frontend/Dashboard:** Streamlit
-* **Cálculo Simbólico:** SymPy (para derivadas exatas)
-* **Machine Learning:** Scikit-Learn (Regressão Linear)
-* **Visualização:** Plotly (Gráficos interativos)
-* **Manipulação de Dados:** Pandas & NumPy
+* **Frontend:** Streamlit
+* **Banco de Dados:** PostgreSQL (via SQLAlchemy e psycopg2)
+* **Matemática Simbólica:** SymPy (Derivadas Exatas)
+* **Machine Learning:** Scikit-Learn
+* **Logs & Auditoria:** Python Logging
 
 ---
 
@@ -51,40 +44,67 @@ A "mágica" por trás do sistema utiliza o **Teorema de Fermat para Pontos Estac
 
 Siga os passos abaixo para rodar a aplicação na sua máquina local.
 
-### Pré-requisitos
-Certifique-se de ter o [Python](https://www.python.org/) instalado.
+Pré-requisitos
 
-### Passo a Passo
+Python 3.11+ instalado.
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone [https://github.com/SEU_USUARIO/NOME_DO_REPO.git](https://github.com/SEU_USUARIO/NOME_DO_REPO.git)
-    cd NOME_DO_REPO
-    ```
+PostgreSQL instalado e rodando.
 
-2.  **Instale as dependências:**
-    Recomenda-se o uso de um ambiente virtual, mas para instalação direta:
-    ```bash
-    pip install -r requirements.txt
-    ```
+## 1. Clonar e Instalar
 
-3.  **Execute o sistema:**
-    ```bash
-    streamlit run app/main.py
-    ```
-    *Nota: Se você tiver múltiplas versões do Python, use `py -3.11 -m streamlit run app/main.py`.*
+Abra o terminal e execute:
 
-O navegador abrirá automaticamente no endereço: `http://localhost:8501`.
+# Clone o repositório
+git clone [https://github.com/SEU_USUARIO/NOME_DO_REPO.git](https://github.com/SEU_USUARIO/NOME_DO_REPO.git)
+cd NOME_DO_REPO
 
----
+# Instale as dependências
+pip install -r requirements.txt
 
-## 📂 Estrutura de Arquivos
 
-```text
-/
-├── app/
-│   └── main.py          # Código fonte principal (Lógica + Interface)
-├── data/                # (Opcional) Pasta para salvar CSVs gerados
-├── requirements.txt     # Lista de bibliotecas necessárias
-├── README.md            # Documentação do projeto
-└── .gitignore           # Arquivos ignorados pelo Git
+## 2. Preparar o Banco de Dados
+
+Abra o pgAdmin (ou terminal do Postgres).
+
+Crie um banco de dados chamado calculo_db.
+
+Abra a "Query Tool" desse banco e rode o código abaixo para criar a tabela:
+
+CREATE TABLE historico_simulacoes (
+    id SERIAL PRIMARY KEY,
+    data_hora TIMESTAMP,
+    custo_unitario FLOAT,
+    custo_fixo FLOAT,
+    preco_otimo FLOAT,
+    lucro_maximo FLOAT
+);
+
+## 3. Configurar a Senha (Obrigatório)
+
+O sistema precisa da senha do seu banco local para conectar. Por segurança, ela não fica salva no Git.
+
+Na raiz do projeto, crie uma pasta chamada .streamlit.
+
+Dentro dela, crie um arquivo chamado secrets.toml.
+
+Cole o conteúdo abaixo e insira sua senha:
+
+# Arquivo: .streamlit/secrets.toml
+
+[connections.postgresql]
+dialect = "postgresql"
+username = "postgres"
+password = "SUA_SENHA_DO_POSTGRES_AQUI"
+host = "localhost"
+port = "5432"
+database = "calculo_db"
+
+
+## 4. Rodar o Sistema
+
+No terminal, execute:
+
+streamlit run app/main.py
+
+
+O navegador abrirá automaticamente em http://localhost:8501.
